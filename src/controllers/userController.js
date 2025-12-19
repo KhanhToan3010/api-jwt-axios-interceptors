@@ -1,12 +1,13 @@
 import { StatusCodes } from 'http-status-codes'
 import ms from 'ms'
+import { JwtProvider, JWTProvider } from '~/providers/JwtProvider'
 
 /**
  * Mock nhanh thông tin user thay vì phải tạo Database rồi query.
  */
 const MOCK_DATABASE = {
   USER: {
-    ID: 'trungquandev-sample-id-12345678',
+    ID: 'toandev-sample-id-12345678',
     EMAIL: 'khanhtoan18079261@gmail.com',
     PASSWORD: 'toandev123'
   }
@@ -15,11 +16,10 @@ const MOCK_DATABASE = {
 /**
  * 2 cái chữ ký bí mật quan trọng trong dự án. Dành cho JWT - Jsonwebtokens
  * Lưu ý phải lưu vào biến môi trường ENV trong thực tế cho bảo mật.
- * Ở đây mình làm Demo thôi nên mới đặt biến const và giá trị random ngẫu nhiên trong code nhé.
- * Xem thêm về biến môi trường: https://youtu.be/Vgr3MWb7aOw
+ * Demo thôi nên mới đặt biến const và giá trị random ngẫu nhiên trong code luôn.
  */
-const ACCESS_TOKEN_SECRET_SIGNATURE = 'KBgJwUETt4HeVD05WaXXI9V3JnwCVP'
-const REFRESH_TOKEN_SECRET_SIGNATURE = 'fcCjhnpeopVn2Hg1jG75MUi62051yL'
+const ACCESS_TOKEN_SECRET_SIGNATURE = 'ZMXXrCiFicCcclDofO7XlyrGok85o9NG'
+const REFRESH_TOKEN_SECRET_SIGNATURE = '0fvDpSaCR44DehhTKxRkj2AqDzq6LM7f'
 
 const login = async (req, res) => {
   try {
@@ -29,8 +29,45 @@ const login = async (req, res) => {
     }
 
     // Trường hợp nhập đúng thông tin tài khoản, tạo token và trả về cho phía Client
+    // Tạo thông tin payload đính kèm trong JWT Token: id, email cửa user
+    const userInfo = {
+      id: MOCK_DATABASE.USER.ID,
+      email: MOCK_DATABASE.USER.EMAIL
+    }
+    // Tạo access token và refresh token để trả về FE cho người dùng
+    const accessToken = await JwtProvider.genarateToken(
+      userInfo,
+      ACCESS_TOKEN_SECRET_SIGNATURE,
+      '1h'
+    )
+    const refreshToken = await JwtProvider.genarateToken(
+      userInfo,
+      REFRESH_TOKEN_SECRET_SIGNATURE,
+      '14 days'
+    )
 
-    res.status(StatusCodes.OK).json({ message: 'Login API success!' })
+    /** Xử lí trả về http only cookie cho phía trình duyệt
+     * maxAge - thời gian sống của cookie khác với thời gian sống cửa token
+    */
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: ms('14 days'),
+      sameSite: 'none'
+    })
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: ms('14 days'),
+      sameSite: 'none'
+    })
+
+    // Trả về thông tin user, Tokens cho trường hợp phía FE cần lưu Tokens vào LocalStorage
+    res.status(StatusCodes.OK).json({
+      ...userInfo,
+      accessToken,
+      refreshToken
+})
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error)
   }
