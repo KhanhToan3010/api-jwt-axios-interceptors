@@ -1,6 +1,6 @@
 import { StatusCodes } from 'http-status-codes'
 import ms from 'ms'
-import { JwtProvider, JWTProvider } from '~/providers/JwtProvider'
+import { JwtProvider, ACCESS_TOKEN_SECRET_SIGNATURE, REFRESH_TOKEN_SECRET_SIGNATURE } from '~/providers/JwtProvider'
 
 /**
  * Mock nhanh thông tin user thay vì phải tạo Database rồi query.
@@ -12,14 +12,6 @@ const MOCK_DATABASE = {
     PASSWORD: 'toandev123'
   }
 }
-
-/**
- * 2 cái chữ ký bí mật quan trọng trong dự án. Dành cho JWT - Jsonwebtokens
- * Lưu ý phải lưu vào biến môi trường ENV trong thực tế cho bảo mật.
- * Demo thôi nên mới đặt biến const và giá trị random ngẫu nhiên trong code luôn.
- */
-const ACCESS_TOKEN_SECRET_SIGNATURE = 'ZMXXrCiFicCcclDofO7XlyrGok85o9NG'
-const REFRESH_TOKEN_SECRET_SIGNATURE = '0fvDpSaCR44DehhTKxRkj2AqDzq6LM7f'
 
 const login = async (req, res) => {
   try {
@@ -38,6 +30,7 @@ const login = async (req, res) => {
     const accessToken = await JwtProvider.genarateToken(
       userInfo,
       ACCESS_TOKEN_SECRET_SIGNATURE,
+      //5 //5s
       '1h'
     )
     const refreshToken = await JwtProvider.genarateToken(
@@ -62,7 +55,7 @@ const login = async (req, res) => {
       sameSite: 'none'
     })
 
-    // Trả về thông tin user, Tokens cho trường hợp phía FE cần lưu Tokens vào LocalStorage
+    // Trả về thông tin user, Tokens cho trường hợp phía FE cần lưu Tokens vào sLocalStorage
     res.status(StatusCodes.OK).json({
       ...userInfo,
       accessToken,
