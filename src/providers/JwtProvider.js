@@ -21,6 +21,14 @@ const verifyToken = async (token, secretSignature) => {
   } catch (error) { throw new Error(error) }
 }
 
+/**
+ * 2 cái chữ ký bí mật quan trọng trong dự án. Dành cho JWT - Jsonwebtokens
+ * Lưu ý phải lưu vào biến môi trường ENV trong thực tế cho bảo mật.
+ * Demo thôi nên mới đặt biến const và giá trị random ngẫu nhiên trong code luôn.
+ */
+export const ACCESS_TOKEN_SECRET_SIGNATURE = 'ZMXXrCiFicCcclDofO7XlyrGok85o9NG'
+export const REFRESH_TOKEN_SECRET_SIGNATURE = '0fvDpSaCR44DehhTKxRkj2AqDzq6LM7f'
+
 export const JwtProvider = {
   genarateToken,
   verifyToken
