@@ -80,8 +80,42 @@ const logout = async (req, res) => {
 
 const refreshToken = async (req, res) => {
   try {
-    // Do something
-    res.status(StatusCodes.OK).json({ message: ' Refresh Token API success.' })
+    // Cach1: Lấy luôn từ cookies đã đinh kèm vào request
+    const refreshTokenFromCookie = req.cookies?.refreshToken
+
+    // Cách 2: Lấy từ localstorage phía FE sẽ truyền vào body khi gọi API
+    const refreshTokenFromBody = req.body?.refreshToken
+
+    // Verify refreshToken nhận từ phía client
+    const refreshTokenDecoded = await JwtProvider.verifyToken(
+    // refreshTokenFromCookie, // dungf token theo cach 1
+      refreshTokenFromBody, // Dung token theo cach 2
+      REFRESH_TOKEN_SECRET_SIGNATURE
+    )
+
+    // Vì chỉ lưu thông tin unique và cố định của user trong token rồi -> lấy luôn từ decoded ra, tiết kiệm query vào DB để lấy data mới
+    const userInfo = {
+      id: refreshTokenDecoded.id,
+      email: refreshTokenDecoded.email
+    }
+    // Tạo access token mới
+    const accessToken = await JwtProvider.genarateToken(
+      userInfo,
+      ACCESS_TOKEN_SECRET_SIGNATURE,
+      //5 //5s
+      '1h'
+    )
+
+    // Res lại cookie accessToken mới cho trường hơp sử dụng cookie
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      maxAge: ms('14 days'),
+      sameSite: 'none'
+    })
+
+    // Trả về accessToken mới cho trường hợp FE cần update lại trong LoacalStorage
+    res.status(StatusCodes.OK).json({ accessToken })
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error)
   }
