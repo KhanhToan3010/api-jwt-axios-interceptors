@@ -68,7 +68,10 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    // Do something
+    // xoa cookie - lam nguoc lai voi viec gan cookie o ham login
+    res.clearCookie('accessToken')
+    res.clearCookie('refreshToken')
+
     res.status(StatusCodes.OK).json({ message: 'Logout API success!' })
   } catch (error) {
     res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(error)
